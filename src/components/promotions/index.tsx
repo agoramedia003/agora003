@@ -8,6 +8,11 @@ import {
   Star,
   ChevronLeft,
   ChevronRight,
+  Plus,
+  Minus,
+  Utensils,
+  Tag,
+  Coins,
 } from "lucide-react";
 import { Card, CardContent, CardFooter } from "../ui/card";
 import {
@@ -17,6 +22,18 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "../ui/carousel";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "../ui/dialog";
+import { Checkbox } from "../ui/checkbox";
+import { Label } from "../ui/label";
+import { Separator } from "../ui/separator";
 
 interface Promotion {
   id: string;
@@ -24,15 +41,28 @@ interface Promotion {
   description: string;
   originalPrice: number;
   discountPrice: number;
+  coinsPrice?: number;
   image: string;
   discountPercentage: number;
   category: string;
+  components?: { name: string; quantity: number }[];
+}
+
+interface Extra {
+  id: string;
+  name: string;
+  price: number;
 }
 
 const PromotionsPage = () => {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState("all");
   const bannerRef = useRef<HTMLDivElement>(null);
+  const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(
+    null,
+  );
+  const [quantity, setQuantity] = useState(1);
+  const [selectedExtras, setSelectedExtras] = useState<Extra[]>([]);
 
   const categories = [
     { id: "all", name: "الكل", icon: ShoppingBag },
@@ -41,6 +71,13 @@ const PromotionsPage = () => {
     { id: "sandwiches", name: "ساندويتش", icon: ShoppingBag },
     { id: "drinks", name: "مشروبات", icon: ShoppingBag },
     { id: "desserts", name: "حلويات", icon: ShoppingBag },
+  ];
+
+  const extras: Extra[] = [
+    { id: "extra1", name: "جبنة إضافية", price: 5 },
+    { id: "extra2", name: "صلصة حارة", price: 3 },
+    { id: "extra3", name: "بصل مقرمش", price: 4 },
+    { id: "extra4", name: "خبز إضافي", price: 2 },
   ];
 
   const banners = [
@@ -71,10 +108,18 @@ const PromotionsPage = () => {
       description: "برجر دجاج مقرمش مع صلصة خاصة وخضروات طازجة",
       originalPrice: 45,
       discountPrice: 30,
+      coinsPrice: 300,
       discountPercentage: 33,
       image:
         "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&q=80",
       category: "burgers",
+      components: [
+        { name: "خبز برجر", quantity: 1 },
+        { name: "صدر دجاج مقرمش", quantity: 1 },
+        { name: "خس", quantity: 1 },
+        { name: "طماطم", quantity: 1 },
+        { name: "صلصة خاصة", quantity: 1 },
+      ],
     },
     {
       id: "2",
@@ -82,10 +127,19 @@ const PromotionsPage = () => {
       description: "بيتزا طازجة مع تشكيلة من الخضروات والجبن",
       originalPrice: 60,
       discountPrice: 40,
+      coinsPrice: 400,
       discountPercentage: 33,
       image:
         "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&q=80",
       category: "pizza",
+      components: [
+        { name: "عجينة بيتزا", quantity: 1 },
+        { name: "صلصة طماطم", quantity: 1 },
+        { name: "جبنة موزاريلا", quantity: 1 },
+        { name: "فلفل", quantity: 1 },
+        { name: "بصل", quantity: 1 },
+        { name: "زيتون", quantity: 1 },
+      ],
     },
     {
       id: "3",
@@ -93,10 +147,18 @@ const PromotionsPage = () => {
       description: "شاورما لحم مع صلصة طحينة وخضروات",
       originalPrice: 50,
       discountPrice: 35,
+      coinsPrice: 350,
       discountPercentage: 30,
       image:
         "https://images.unsplash.com/photo-1561651823-34feb02250e4?w=500&q=80",
       category: "sandwiches",
+      components: [
+        { name: "خبز صاج", quantity: 1 },
+        { name: "لحم مشوي", quantity: 1 },
+        { name: "طحينة", quantity: 1 },
+        { name: "بصل", quantity: 1 },
+        { name: "بقدونس", quantity: 1 },
+      ],
     },
     {
       id: "4",
@@ -104,10 +166,12 @@ const PromotionsPage = () => {
       description: "عصير برتقال طازج 100%",
       originalPrice: 20,
       discountPrice: 15,
+      coinsPrice: 150,
       discountPercentage: 25,
       image:
         "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=500&q=80",
       category: "drinks",
+      components: [{ name: "برتقال طازج", quantity: 3 }],
     },
     {
       id: "5",
@@ -115,10 +179,16 @@ const PromotionsPage = () => {
       description: "كيك الشوكولاتة الفاخر مع صوص الشوكولاتة",
       originalPrice: 30,
       discountPrice: 20,
+      coinsPrice: 200,
       discountPercentage: 33,
       image:
         "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&q=80",
       category: "desserts",
+      components: [
+        { name: "كيك شوكولاتة", quantity: 1 },
+        { name: "صوص شوكولاتة", quantity: 1 },
+        { name: "كريمة مخفوقة", quantity: 1 },
+      ],
     },
     {
       id: "6",
@@ -126,10 +196,20 @@ const PromotionsPage = () => {
       description: "برجر لحم أنجوس مع جبنة شيدر وصلصة خاصة",
       originalPrice: 55,
       discountPrice: 40,
+      coinsPrice: 400,
       discountPercentage: 27,
       image:
         "https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?w=500&q=80",
       category: "burgers",
+      components: [
+        { name: "خبز برجر", quantity: 1 },
+        { name: "لحم أنجوس", quantity: 1 },
+        { name: "جبنة شيدر", quantity: 1 },
+        { name: "خس", quantity: 1 },
+        { name: "طماطم", quantity: 1 },
+        { name: "بصل", quantity: 1 },
+        { name: "صلصة خاصة", quantity: 1 },
+      ],
     },
   ];
 
@@ -142,10 +222,52 @@ const PromotionsPage = () => {
     setActiveCategory(categoryId);
   };
 
-  const handleAddToCart = (promotion: Promotion) => {
+  const handlePromotionClick = (promotion: Promotion) => {
+    setSelectedPromotion(promotion);
+    setQuantity(1);
+    setSelectedExtras([]);
+  };
+
+  const handleQuantityChange = (change: number) => {
+    setQuantity(Math.max(1, quantity + change));
+  };
+
+  const handleExtraToggle = (extra: Extra) => {
+    setSelectedExtras((prev) => {
+      const exists = prev.some((item) => item.id === extra.id);
+      if (exists) {
+        return prev.filter((item) => item.id !== extra.id);
+      } else {
+        return [...prev, extra];
+      }
+    });
+  };
+
+  const calculateTotalPrice = () => {
+    if (!selectedPromotion) return 0;
+    const extrasTotal = selectedExtras.reduce(
+      (sum, extra) => sum + extra.price,
+      0,
+    );
+    return (selectedPromotion.discountPrice + extrasTotal) * quantity;
+  };
+
+  const handleAddToCart = () => {
+    if (!selectedPromotion) return;
+
     // In a real app, you would dispatch this to your cart state
-    console.log("Added to cart:", promotion);
-    navigate("/cart");
+    console.log("Added to cart:", {
+      product: selectedPromotion,
+      quantity,
+      extras: selectedExtras,
+      totalPrice: calculateTotalPrice(),
+    });
+
+    // Close the dialog
+    setSelectedPromotion(null);
+
+    // Show success message
+    alert("تمت إضافة المنتج إلى السلة بنجاح");
   };
 
   return (
@@ -219,10 +341,10 @@ const PromotionsPage = () => {
                 <div className="flex justify-between items-center">
                   <div>
                     <span className="font-bold text-sm">
-                      {promotion.discountPrice} ر.س
+                      {promotion.discountPrice} د.م
                     </span>
                     <span className="text-xs text-gray-500 line-through mr-2">
-                      {promotion.originalPrice} ر.س
+                      {promotion.originalPrice} د.م
                     </span>
                   </div>
                 </div>
@@ -231,7 +353,7 @@ const PromotionsPage = () => {
                 <Button
                   className="w-full text-xs flex items-center justify-center gap-1"
                   size="sm"
-                  onClick={() => handleAddToCart(promotion)}
+                  onClick={() => handlePromotionClick(promotion)}
                 >
                   <ShoppingCart className="h-3 w-3" />
                   أضف إلى السلة
@@ -241,6 +363,150 @@ const PromotionsPage = () => {
           ))}
         </div>
       </div>
+
+      {/* Product Details Dialog */}
+      <Dialog
+        open={!!selectedPromotion}
+        onOpenChange={() => setSelectedPromotion(null)}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{selectedPromotion?.title}</DialogTitle>
+            <DialogDescription>
+              {selectedPromotion?.description}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <img
+                src={selectedPromotion?.image}
+                alt={selectedPromotion?.title}
+                className="w-full h-48 object-cover rounded-md"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="font-medium mb-1 flex items-center gap-1">
+                  <Tag className="h-4 w-4 text-primary" />
+                  السعر
+                </h3>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-lg">
+                    {selectedPromotion?.discountPrice} د.م
+                  </span>
+                  <span className="text-gray-500 line-through text-sm">
+                    {selectedPromotion?.originalPrice} د.م
+                  </span>
+                </div>
+                {selectedPromotion?.coinsPrice && (
+                  <div className="flex items-center gap-1 text-amber-600 text-sm mt-1">
+                    <Coins className="h-3 w-3" />
+                    <span>{selectedPromotion.coinsPrice} كوينز</span>
+                  </div>
+                )}
+              </div>
+              <div>
+                <h3 className="font-medium mb-1 flex items-center gap-1">
+                  <Star className="h-4 w-4 text-amber-500" />
+                  الخصم
+                </h3>
+                <div className="text-green-600 font-medium">
+                  {selectedPromotion?.discountPercentage}% خصم
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="font-medium mb-2 flex items-center gap-1">
+                <Utensils className="h-4 w-4 text-primary" />
+                المكونات
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                {selectedPromotion?.components?.map((component, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-2 border rounded-md text-sm"
+                  >
+                    <span>{component.name}</span>
+                    <span className="text-gray-500">x{component.quantity}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
+            <div className="grid gap-2">
+              <Label htmlFor="quantity" className="flex items-center gap-1">
+                الكمية
+              </Label>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleQuantityChange(-1)}
+                >
+                  <Minus className="h-4 w-4" />
+                </Button>
+                <span className="w-8 text-center">{quantity}</span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleQuantityChange(1)}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label className="flex items-center gap-1">إضافات</Label>
+              <div className="grid gap-2">
+                {extras.map((extra) => (
+                  <div
+                    key={extra.id}
+                    className="flex items-center justify-between p-2 border rounded-md"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id={extra.id}
+                        checked={selectedExtras.some(
+                          (item) => item.id === extra.id,
+                        )}
+                        onCheckedChange={() => handleExtraToggle(extra)}
+                      />
+                      <Label htmlFor={extra.id} className="text-sm font-normal">
+                        {extra.name}
+                      </Label>
+                    </div>
+                    <span className="text-sm">{extra.price} د.م</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center mt-2">
+              <span className="font-medium">الإجمالي:</span>
+              <span className="font-bold text-lg">
+                {calculateTotalPrice()} د.م
+              </span>
+            </div>
+          </div>
+
+          <DialogFooter className="sm:justify-between">
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                إلغاء
+              </Button>
+            </DialogClose>
+            <Button type="button" onClick={handleAddToCart}>
+              إضافة إلى السلة
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };

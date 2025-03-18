@@ -187,13 +187,13 @@ const OrderCard = ({ order }: { order: Order }) => {
                 <span>
                   {item.name} x{item.quantity}
                 </span>
-                <span>{item.price * item.quantity} ر.س</span>
+                <span>{item.price * item.quantity} د.م</span>
               </li>
             ))}
           </ul>
           <div className="flex justify-between font-bold mt-2 pt-2 border-t">
             <span>الإجمالي</span>
-            <span>{order.total} ر.س</span>
+            <span>{order.total} د.م</span>
           </div>
         </div>
 
@@ -265,7 +265,7 @@ const OrderCard = ({ order }: { order: Order }) => {
                             (item) => `
                           <li class="flex justify-between">
                             <span>${item.name} x${item.quantity}</span>
-                            <span>${item.price * item.quantity} ر.س</span>
+                            <span>${item.price * item.quantity} د.م</span>
                           </li>
                         `,
                           )
@@ -275,7 +275,7 @@ const OrderCard = ({ order }: { order: Order }) => {
                     <div class="pt-2 border-t">
                       <div class="flex justify-between font-bold">
                         <span>الإجمالي</span>
-                        <span>${order.total} ر.س</span>
+                        <span>${order.total} د.م</span>
                       </div>
                     </div>
                   </div>

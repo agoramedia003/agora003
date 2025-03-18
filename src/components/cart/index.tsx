@@ -27,6 +27,14 @@ import {
   Banknote,
   Coins,
   Bell,
+  ShoppingBag,
+  Truck,
+  Phone,
+  MapPin,
+  User,
+  Calendar,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
@@ -144,6 +152,7 @@ const CartPage = () => {
   const [stampSuccess, setStampSuccess] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(false);
   const [orderSummary, setOrderSummary] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleQuantityChange = (id: string, change: number) => {
     setCartItems((prev) =>
@@ -195,146 +204,182 @@ const CartPage = () => {
       selectedLoyaltyCard &&
       selectedLoyaltyCard.type === "reward"
     ) {
-      // Simulate stamp validation
-      if (stampCode === "STAMP123" || stampCode.length >= 6) {
-        setLoyaltyCards((prev) =>
-          prev.map((card) => {
-            if (card.id === selectedLoyaltyCard.id && card.stamps) {
-              const updatedStamps = card.stamps.map((stamp, index) => {
-                if (index === 0 && stamp.current < stamp.required) {
-                  return { ...stamp, current: stamp.current + 1 };
-                }
-                return stamp;
-              });
-              return { ...card, stamps: updatedStamps };
-            }
-            return card;
-          }),
-        );
-        setStampSuccess(true);
-        setTimeout(() => {
-          setStampSuccess(false);
-          setShowStampDialog(false);
-          setStampCode("");
-        }, 2000);
-      } else {
-        // Show error
-        alert("رمز الطابع غير صالح");
-      }
+      setIsSubmitting(true);
+
+      // Simulate API call to validate stamp code
+      setTimeout(() => {
+        // Simulate stamp validation with backend
+        if (stampCode === "STAMP123" || stampCode.length >= 6) {
+          setLoyaltyCards((prev) =>
+            prev.map((card) => {
+              if (card.id === selectedLoyaltyCard.id && card.stamps) {
+                const updatedStamps = card.stamps.map((stamp, index) => {
+                  if (index === 0 && stamp.current < stamp.required) {
+                    return { ...stamp, current: stamp.current + 1 };
+                  }
+                  return stamp;
+                });
+                return { ...card, stamps: updatedStamps };
+              }
+              return card;
+            }),
+          );
+          setStampSuccess(true);
+          setTimeout(() => {
+            setStampSuccess(false);
+            setShowStampDialog(false);
+            setStampCode("");
+          }, 2000);
+        } else {
+          // Show error
+          alert("رمز الطابع غير صالح");
+        }
+        setIsSubmitting(false);
+      }, 1000);
     }
   };
 
   const handleSubmitOrder = () => {
-    // Generate order summary
-    const orderNumber = Math.floor(Math.random() * 10000);
-    const orderDate = new Date().toLocaleString("ar-SA");
+    // Validate customer info
+    if (!customerInfo.name || !customerInfo.phone || !customerInfo.address) {
+      alert("يرجى إدخال جميع معلومات التوصيل");
+      return;
+    }
 
-    let summary = `<div class="text-center">
-      <div class="mb-4 flex justify-center">
-        <div class="rounded-full bg-green-100 p-3">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-          </svg>
+    if (deliveryTime === "scheduled" && !scheduledTime) {
+      alert("يرجى تحديد وقت التوصيل");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    // Simulate API call to submit order to backend
+    setTimeout(() => {
+      // Generate order summary
+      const orderNumber = Math.floor(Math.random() * 10000);
+      const orderDate = new Date().toLocaleString("ar-SA");
+
+      let summary = `<div class="text-center">
+        <div class="mb-4 flex justify-center">
+          <div class="rounded-full bg-green-100 p-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        </div>
+        <h3 class="text-lg font-bold mb-2">تم تقديم طلبك بنجاح!</h3>
+        <p class="text-sm text-gray-500 mb-4">رقم الطلب: #${orderNumber}</p>
+      </div>
+      
+      <div class="border-t pt-4 mt-4">
+        <h4 class="font-medium mb-2">ملخص الطلب:</h4>
+        <ul class="space-y-2 mb-4">`;
+
+      cartItems.forEach((item) => {
+        summary += `<li class="flex justify-between">
+          <span>${item.name} x${item.quantity}</span>
+          <span>${item.discountPrice * item.quantity} د.م</span>
+        </li>`;
+
+        if (item.extras && item.extras.length > 0) {
+          item.extras.forEach((extra) => {
+            summary += `<li class="flex justify-between text-sm text-gray-500 pr-4">
+              <span>+ ${extra.name}</span>
+              <span>${extra.price * item.quantity} د.م</span>
+            </li>`;
+          });
+        }
+      });
+
+      summary += `</ul>
+        <div class="flex justify-between font-medium">
+          <span>المجموع الفرعي:</span>
+          <span>${calculateSubtotal()} د.م</span>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span>الإضافات:</span>
+          <span>${calculateExtrasTotal()} د.م</span>
+        </div>
+        <div class="flex justify-between text-sm text-green-600">
+          <span>الخصم:</span>
+          <span>- ${calculateDiscount()} د.م</span>
+        </div>
+        <div class="flex justify-between font-bold mt-2 pt-2 border-t">
+          <span>المجموع:</span>
+          <span>${calculateTotal()} د.م</span>
         </div>
       </div>
-      <h3 class="text-lg font-bold mb-2">تم تقديم طلبك بنجاح!</h3>
-      <p class="text-sm text-gray-500 mb-4">رقم الطلب: #${orderNumber}</p>
-    </div>
-    
-    <div class="border-t pt-4 mt-4">
-      <h4 class="font-medium mb-2">ملخص الطلب:</h4>
-      <ul class="space-y-2 mb-4">`;
+      
+      <div class="border-t pt-4 mt-4">
+        <h4 class="font-medium mb-2">معلومات التوصيل:</h4>
+        <p class="text-sm">${customerInfo.name}</p>
+        <p class="text-sm">${customerInfo.phone}</p>
+        <p class="text-sm">${customerInfo.address}</p>
+        <p class="text-sm mt-2">وقت التوصيل: ${deliveryTime === "asap" ? "أسرع وقت ممكن" : scheduledTime}</p>
+        <p class="text-sm mt-2">طريقة الدفع: ${paymentMethod === "cash" ? "الدفع عند الاستلام" : "رصيد الكوينز"}</p>
+      </div>`;
 
-    cartItems.forEach((item) => {
-      summary += `<li class="flex justify-between">
-        <span>${item.name} x${item.quantity}</span>
-        <span>${item.discountPrice * item.quantity} ر.س</span>
-      </li>`;
+      // Add loyalty program details if selected
+      if (selectedLoyaltyCard) {
+        summary += `<div class="border-t pt-4 mt-4">
+          <h4 class="font-medium mb-2">برنامج الولاء:</h4>`;
 
-      if (item.extras && item.extras.length > 0) {
-        item.extras.forEach((extra) => {
-          summary += `<li class="flex justify-between text-sm text-gray-500 pr-4">
-            <span>+ ${extra.name}</span>
-            <span>${extra.price * item.quantity} ر.س</span>
-          </li>`;
-        });
-      }
-    });
-
-    summary += `</ul>
-      <div class="flex justify-between font-medium">
-        <span>المجموع الفرعي:</span>
-        <span>${calculateSubtotal()} ر.س</span>
-      </div>
-      <div class="flex justify-between text-sm">
-        <span>الإضافات:</span>
-        <span>${calculateExtrasTotal()} ر.س</span>
-      </div>
-      <div class="flex justify-between text-sm text-green-600">
-        <span>الخصم:</span>
-        <span>- ${calculateDiscount()} ر.س</span>
-      </div>
-      <div class="flex justify-between font-bold mt-2 pt-2 border-t">
-        <span>المجموع:</span>
-        <span>${calculateTotal()} ر.س</span>
-      </div>
-    </div>
-    
-    <div class="border-t pt-4 mt-4">
-      <h4 class="font-medium mb-2">معلومات التوصيل:</h4>
-      <p class="text-sm">${customerInfo.name}</p>
-      <p class="text-sm">${customerInfo.phone}</p>
-      <p class="text-sm">${customerInfo.address}</p>
-      <p class="text-sm mt-2">وقت التوصيل: ${deliveryTime === "asap" ? "أسرع وقت ممكن" : scheduledTime}</p>
-      <p class="text-sm mt-2">طريقة الدفع: ${paymentMethod === "cash" ? "الدفع عند الاستلام" : "رصيد الكوينز"}</p>
-    </div>`;
-
-    // Add loyalty program details if selected
-    if (selectedLoyaltyCard) {
-      summary += `<div class="border-t pt-4 mt-4">
-        <h4 class="font-medium mb-2">برنامج الولاء:</h4>`;
-
-      if (selectedLoyaltyCard.type === "reward") {
-        if (loyaltyAction === "redeem") {
+        if (selectedLoyaltyCard.type === "reward") {
+          if (loyaltyAction === "redeem") {
+            summary += `<div class="flex items-center gap-2 mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <p class="text-sm">تم استخدام مكافأة: ${selectedLoyaltyCard.stamps && selectedLoyaltyCard.stamps[0].reward}</p>
+            </div>
+            <p class="text-sm text-gray-500">رقم البطاقة: ${selectedLoyaltyCard.code}</p>`;
+          } else if (loyaltyAction === "request") {
+            summary += `<div class="flex items-center gap-2 mb-2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+              <p class="text-sm">سيتم إرسال رمز تفعيل الطابع مع الطلب</p>
+            </div>
+            <p class="text-sm text-gray-500">رقم البطاقة: ${selectedLoyaltyCard.code}</p>`;
+          }
+        } else if (selectedLoyaltyCard.type === "gift") {
           summary += `<div class="flex items-center gap-2 mb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
             </svg>
-            <p class="text-sm">تم استخدام مكافأة: ${selectedLoyaltyCard.stamps && selectedLoyaltyCard.stamps[0].reward}</p>
-          </div>
-          <p class="text-sm text-gray-500">رقم البطاقة: ${selectedLoyaltyCard.code}</p>`;
-        } else if (loyaltyAction === "request") {
-          summary += `<div class="flex items-center gap-2 mb-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-            </svg>
-            <p class="text-sm">سيتم إرسال رمز تفعيل الطابع مع الطلب</p>
+            <p class="text-sm">تم استخدام بطاقة هدية: ${selectedLoyaltyCard.title}</p>
           </div>
           <p class="text-sm text-gray-500">رقم البطاقة: ${selectedLoyaltyCard.code}</p>`;
         }
-      } else if (selectedLoyaltyCard.type === "gift") {
-        summary += `<div class="flex items-center gap-2 mb-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-          </svg>
-          <p class="text-sm">تم استخدام بطاقة هدية: ${selectedLoyaltyCard.title}</p>
-        </div>
-        <p class="text-sm text-gray-500">رقم البطاقة: ${selectedLoyaltyCard.code}</p>`;
+
+        summary += `</div>`;
       }
 
-      summary += `</div>`;
-    }
+      // Add WhatsApp confirmation button
+      summary += `<div class="border-t pt-4 mt-4">
+        <a href="https://wa.me/212675812554?text=${encodeURIComponent(`طلب جديد #${orderNumber}\n\nالاسم: ${customerInfo.name}\nالهاتف: ${customerInfo.phone}\nالعنوان: ${customerInfo.address}\n\nالمجموع: ${calculateTotal()} د.م`)}" target="_blank" class="flex items-center justify-center gap-2 w-full p-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+          </svg>
+          تأكيد عبر واتساب
+        </a>
+      </div>`;
 
-    setOrderSummary(summary);
-    setOrderSuccess(true);
+      setOrderSummary(summary);
+      setOrderSuccess(true);
+      setIsSubmitting(false);
 
-    // In a real app, you would submit the order to your backend here
+      // In a real app, you would submit the order to your backend here
+    }, 1500);
   };
 
   return (
     <Layout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold mb-4">سلة المشتريات</h1>
+        <h1 className="text-2xl font-bold mb-4 flex items-center gap-2">
+          <ShoppingBag className="h-6 w-6 text-primary" />
+          سلة المشتريات
+        </h1>
 
         {cartItems.length === 0 ? (
           <Card className="text-center py-12">
@@ -347,7 +392,13 @@ const CartPage = () => {
                 <p className="text-gray-500 mb-6">
                   لم تقم بإضافة أي منتجات إلى السلة بعد
                 </p>
-                <Button onClick={() => navigate("/store")}>تصفح المتجر</Button>
+                <Button
+                  onClick={() => navigate("/store")}
+                  className="flex items-center gap-2"
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  تصفح المتجر
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -355,15 +406,18 @@ const CartPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-2 space-y-4">
               {/* Cart Items */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>المنتجات ({cartItems.length})</CardTitle>
+              <Card className="overflow-hidden border-primary/20 shadow-sm">
+                <CardHeader className="bg-primary/5">
+                  <CardTitle className="flex items-center gap-2">
+                    <ShoppingBag className="h-5 w-5 text-primary" />
+                    المنتجات ({cartItems.length})
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 p-4">
                   {cartItems.map((item) => (
                     <div
                       key={item.id}
-                      className="flex flex-col sm:flex-row border rounded-lg p-3 sm:p-4"
+                      className="flex flex-col sm:flex-row border rounded-lg p-3 sm:p-4 hover:bg-gray-50 transition-colors"
                     >
                       <div className="w-full sm:w-20 h-20 rounded-md overflow-hidden flex-shrink-0 mb-3 sm:mb-0">
                         <img
@@ -388,7 +442,7 @@ const CartPage = () => {
                                   key={index}
                                   className="text-xs bg-gray-100 px-2 py-1 rounded-full"
                                 >
-                                  {extra.name} (+{extra.price} ر.س)
+                                  {extra.name} (+{extra.price} د.م)
                                 </span>
                               ))}
                             </div>
@@ -398,11 +452,11 @@ const CartPage = () => {
                       <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-between mt-3 sm:mt-0">
                         <div className="text-left">
                           <div className="font-bold text-sm sm:text-base">
-                            {item.discountPrice} ر.س
+                            {item.discountPrice} د.م
                           </div>
                           {item.price > item.discountPrice && (
                             <div className="text-xs sm:text-sm text-gray-500 line-through">
-                              {item.price} ر.س
+                              {item.price} د.م
                             </div>
                           )}
                         </div>
@@ -429,7 +483,7 @@ const CartPage = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-red-500"
+                            className="h-8 w-8 text-red-500 hover:bg-red-50 hover:text-red-600"
                             onClick={() => handleRemoveItem(item.id)}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -442,9 +496,12 @@ const CartPage = () => {
               </Card>
 
               {/* Loyalty Program */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>برنامج الولاء</CardTitle>
+              <Card className="overflow-hidden border-primary/20 shadow-sm">
+                <CardHeader className="bg-primary/5">
+                  <CardTitle className="flex items-center gap-2">
+                    <Award className="h-5 w-5 text-primary" />
+                    برنامج الولاء
+                  </CardTitle>
                   <CardDescription>
                     استخدم بطاقات المكافآت والهدايا مع طلبك
                   </CardDescription>
@@ -616,13 +673,19 @@ const CartPage = () => {
               </Card>
 
               {/* Customer Information */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>معلومات التوصيل</CardTitle>
+              <Card className="overflow-hidden border-primary/20 shadow-sm">
+                <CardHeader className="bg-primary/5">
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5 text-primary" />
+                    معلومات التوصيل
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">الاسم</Label>
+                    <Label htmlFor="name" className="flex items-center gap-1">
+                      <User className="h-4 w-4" />
+                      الاسم
+                    </Label>
                     <Input
                       id="name"
                       value={customerInfo.name}
@@ -635,7 +698,10 @@ const CartPage = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">رقم الهاتف</Label>
+                    <Label htmlFor="phone" className="flex items-center gap-1">
+                      <Phone className="h-4 w-4" />
+                      رقم الهاتف
+                    </Label>
                     <Input
                       id="phone"
                       value={customerInfo.phone}
@@ -648,7 +714,13 @@ const CartPage = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="address">العنوان</Label>
+                    <Label
+                      htmlFor="address"
+                      className="flex items-center gap-1"
+                    >
+                      <MapPin className="h-4 w-4" />
+                      العنوان
+                    </Label>
                     <Input
                       id="address"
                       value={customerInfo.address}
@@ -664,8 +736,8 @@ const CartPage = () => {
               </Card>
 
               {/* Delivery Time */}
-              <Card>
-                <CardHeader>
+              <Card className="overflow-hidden border-primary/20 shadow-sm">
+                <CardHeader className="bg-primary/5">
                   <CardTitle className="flex items-center gap-2">
                     <Clock className="h-5 w-5 text-primary" />
                     وقت التوصيل
@@ -677,50 +749,48 @@ const CartPage = () => {
                     onValueChange={(value) =>
                       setDeliveryTime(value as "asap" | "scheduled")
                     }
-                    className="space-y-4"
+                    className="space-y-3"
                   >
-                    <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                    <div className="flex items-center space-x-2 space-x-reverse">
                       <RadioGroupItem value="asap" id="asap" />
-                      <Label htmlFor="asap">أسرع وقت ممكن</Label>
+                      <Label
+                        htmlFor="asap"
+                        className="font-medium flex items-center gap-2"
+                      >
+                        <Truck className="h-4 w-4 text-primary" />
+                        أسرع وقت ممكن
+                      </Label>
                     </div>
-                    <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                    <div className="flex items-center space-x-2 space-x-reverse">
                       <RadioGroupItem value="scheduled" id="scheduled" />
-                      <Label htmlFor="scheduled">تحديد وقت</Label>
+                      <Label
+                        htmlFor="scheduled"
+                        className="font-medium flex items-center gap-2"
+                      >
+                        <Calendar className="h-4 w-4 text-primary" />
+                        تحديد وقت لاحق
+                      </Label>
                     </div>
                   </RadioGroup>
 
                   {deliveryTime === "scheduled" && (
                     <div className="mt-4">
                       <Label htmlFor="time">اختر الوقت</Label>
-                      <select
+                      <Input
                         id="time"
-                        className="w-full mt-1 p-2 border rounded-md"
+                        type="time"
+                        className="mt-1"
                         value={scheduledTime}
                         onChange={(e) => setScheduledTime(e.target.value)}
-                      >
-                        <option value="">اختر وقت التوصيل</option>
-                        {Array.from({ length: 12 }).map((_, i) => {
-                          const hour = i + 9; // Start from 9 AM
-                          return (
-                            <React.Fragment key={i}>
-                              <option
-                                value={`${hour}:00`}
-                              >{`${hour}:00`}</option>
-                              <option
-                                value={`${hour}:30`}
-                              >{`${hour}:30`}</option>
-                            </React.Fragment>
-                          );
-                        })}
-                      </select>
+                      />
                     </div>
                   )}
                 </CardContent>
               </Card>
 
               {/* Payment Method */}
-              <Card>
-                <CardHeader>
+              <Card className="overflow-hidden border-primary/20 shadow-sm">
+                <CardHeader className="bg-primary/5">
                   <CardTitle className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5 text-primary" />
                     طريقة الدفع
@@ -732,90 +802,122 @@ const CartPage = () => {
                     onValueChange={(value) =>
                       setPaymentMethod(value as "cash" | "coins")
                     }
-                    className="space-y-4"
+                    className="space-y-3"
                   >
-                    <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                    <div className="flex items-center space-x-2 space-x-reverse">
                       <RadioGroupItem value="cash" id="cash" />
-                      <Label htmlFor="cash" className="flex items-center gap-2">
+                      <Label
+                        htmlFor="cash"
+                        className="font-medium flex items-center gap-2"
+                      >
                         <Banknote className="h-4 w-4 text-green-600" />
                         الدفع عند الاستلام
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                    <div className="flex items-center space-x-2 space-x-reverse">
                       <RadioGroupItem value="coins" id="coins" />
                       <Label
                         htmlFor="coins"
-                        className="flex items-center gap-2"
+                        className="font-medium flex items-center gap-2"
                       >
-                        <Coins className="h-4 w-4 text-amber-500" />
-                        الدفع من رصيد الكوينز
+                        <Coins className="h-4 w-4 text-amber-600" />
+                        استخدام رصيد الكوينز
                       </Label>
                     </div>
                   </RadioGroup>
-
-                  {paymentMethod === "coins" && (
-                    <div className="mt-4 p-3 bg-amber-50 rounded-lg">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Coins className="h-5 w-5 text-amber-500" />
-                        <p className="font-medium">رصيدك الحالي: 1250 كوينز</p>
-                      </div>
-                      <p className="text-sm text-gray-600">
-                        سيتم خصم {calculateTotal()} كوينز من رصيدك
-                      </p>
-                      {calculateTotal() > 1250 && (
-                        <p className="text-sm text-red-500 mt-2">
-                          رصيدك غير كافي لإتمام عملية الدفع
-                        </p>
-                      )}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             </div>
 
             {/* Order Summary */}
             <div>
-              <Card className="sticky top-20">
-                <CardHeader>
-                  <CardTitle>ملخص الطلب</CardTitle>
+              <Card className="sticky top-4 overflow-hidden border-primary/20 shadow-sm">
+                <CardHeader className="bg-primary/5">
+                  <CardTitle className="flex items-center gap-2">
+                    <ShoppingBag className="h-5 w-5 text-primary" />
+                    ملخص الطلب
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">المجموع الفرعي</span>
-                    <span>{calculateSubtotal()} ر.س</span>
+                  <div className="space-y-2">
+                    {cartItems.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex justify-between text-sm"
+                      >
+                        <span>
+                          {item.name} x{item.quantity}
+                        </span>
+                        <span>{item.discountPrice * item.quantity} د.م</span>
+                      </div>
+                    ))}
                   </div>
-                  {calculateExtrasTotal() > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">الإضافات</span>
-                      <span>{calculateExtrasTotal()} ر.س</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">رسوم التوصيل</span>
-                    <span className="text-green-600">مجاني</span>
-                  </div>
-                  {calculateDiscount() > 0 && (
-                    <div className="flex justify-between text-green-600">
-                      <span>الخصم</span>
-                      <span>- {calculateDiscount()} ر.س</span>
-                    </div>
-                  )}
+
                   <Separator />
-                  <div className="flex justify-between font-bold text-lg">
-                    <span>المجموع</span>
-                    <span>{calculateTotal()} ر.س</span>
+
+                  <div className="space-y-1">
+                    <div className="flex justify-between">
+                      <span>المجموع الفرعي:</span>
+                      <span>{calculateSubtotal()} د.م</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>الإضافات:</span>
+                      <span>{calculateExtrasTotal()} د.م</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>الخصم:</span>
+                      <span>- {calculateDiscount()} د.م</span>
+                    </div>
                   </div>
+
+                  <Separator />
+
+                  <div className="flex justify-between font-bold">
+                    <span>المجموع:</span>
+                    <span>{calculateTotal()} د.م</span>
+                  </div>
+
+                  {selectedLoyaltyCard && (
+                    <div className="mt-2 p-2 bg-primary/5 rounded-md text-sm">
+                      <div className="flex items-center gap-2">
+                        {selectedLoyaltyCard.type === "reward" ? (
+                          <Award className="h-4 w-4 text-primary" />
+                        ) : (
+                          <Gift className="h-4 w-4 text-primary" />
+                        )}
+                        <span className="font-medium">
+                          {selectedLoyaltyCard.title}
+                        </span>
+                      </div>
+                      {selectedLoyaltyCard.type === "reward" &&
+                        loyaltyAction === "redeem" && (
+                          <p className="mt-1 text-green-600">
+                            سيتم استبدال مكافأة:{" "}
+                            {selectedLoyaltyCard.stamps &&
+                              selectedLoyaltyCard.stamps[0].reward}
+                          </p>
+                        )}
+                    </div>
+                  )}
                 </CardContent>
                 <CardFooter>
                   <Button
-                    className="w-full"
+                    className="w-full flex items-center justify-center gap-2"
                     size="lg"
                     onClick={handleSubmitOrder}
-                    disabled={
-                      paymentMethod === "coins" && calculateTotal() > 1250
-                    }
+                    disabled={isSubmitting}
                   >
-                    تقديم الطلب
+                    {isSubmitting ? (
+                      <>
+                        <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full"></span>
+                        جاري المعالجة...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="h-5 w-5" />
+                        إتمام الطلب
+                      </>
+                    )}
                   </Button>
                 </CardFooter>
               </Card>
@@ -824,61 +926,87 @@ const CartPage = () => {
         )}
       </div>
 
-      {/* Add Stamp Dialog */}
+      {/* Stamp Dialog */}
       <Dialog open={showStampDialog} onOpenChange={setShowStampDialog}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>إضافة طابع</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Award className="h-5 w-5 text-primary" />
+              إضافة طابع جديد
+            </DialogTitle>
             <DialogDescription>
-              أدخل رمز الطابع لإضافته إلى بطاقة المكافآت
+              أدخل رمز الطابع الذي حصلت عليه مع طلبك
             </DialogDescription>
           </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="stampCode">رمز الطابع</Label>
+              <Input
+                id="stampCode"
+                value={stampCode}
+                onChange={(e) => setStampCode(e.target.value)}
+                placeholder="أدخل الرمز هنا"
+              />
+            </div>
 
-          {stampSuccess ? (
-            <Alert className="bg-green-50 border-green-200 text-green-800">
-              <Check className="h-4 w-4" />
-              <AlertTitle>تم بنجاح</AlertTitle>
-              <AlertDescription>
-                تم إضافة الطابع بنجاح إلى بطاقة المكافآت
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <>
-              <div className="grid gap-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="stampCode">رمز الطابع</Label>
-                  <Input
-                    id="stampCode"
-                    placeholder="أدخل رمز الطابع"
-                    value={stampCode}
-                    onChange={(e) => setStampCode(e.target.value)}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="submit" onClick={handleAddStamp}>
-                  إضافة الطابع
-                </Button>
-              </DialogFooter>
-            </>
-          )}
+            {stampSuccess && (
+              <Alert className="bg-green-50 border-green-200">
+                <Check className="h-4 w-4 text-green-600" />
+                <AlertTitle className="text-green-800">
+                  تمت إضافة الطابع بنجاح!
+                </AlertTitle>
+                <AlertDescription className="text-green-700">
+                  تم إضافة طابع جديد إلى بطاقة المكافآت الخاصة بك.
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+          <DialogFooter className="flex space-x-2 space-x-reverse">
+            <Button
+              type="submit"
+              onClick={handleAddStamp}
+              disabled={!stampCode || stampSuccess || isSubmitting}
+              className="flex items-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full"></span>
+                  جاري التحقق...
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4" />
+                  إضافة
+                </>
+              )}
+            </Button>
+            <DialogClose asChild>
+              <Button type="button" variant="outline">
+                إلغاء
+              </Button>
+            </DialogClose>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Order Success Dialog */}
       <Dialog open={orderSuccess} onOpenChange={setOrderSuccess}>
-        <DialogContent className="sm:max-w-[500px]">
-          <div dangerouslySetInnerHTML={{ __html: orderSummary }} />
-          <DialogFooter>
+        <DialogContent className="max-w-md">
+          <div
+            className="prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: orderSummary }}
+          />
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
             <Button
               onClick={() => {
                 setOrderSuccess(false);
-                // Clear cart after successful order
-                setCartItems([]);
                 navigate("/orders");
               }}
+              className="w-full flex items-center justify-center gap-2"
+              variant="default"
             >
-              متابعة طلباتي
+              <Truck className="h-4 w-4" />
+              متابعة الطلب
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -10,6 +10,8 @@ import {
   Minus,
   X,
   Star,
+  Utensils,
+  Coins,
 } from "lucide-react";
 import { Input } from "../ui/input";
 import {
@@ -24,6 +26,7 @@ import {
 import { Checkbox } from "../ui/checkbox";
 import { Label } from "../ui/label";
 import { Card, CardContent } from "../ui/card";
+import { Separator } from "../ui/separator";
 
 interface Product {
   id: string;
@@ -35,6 +38,7 @@ interface Product {
   image: string;
   category: string;
   featured?: boolean;
+  components?: { name: string; quantity: number }[];
 }
 
 interface Extra {
@@ -72,6 +76,13 @@ const StorePage = () => {
         "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&q=80",
       category: "burgers",
       featured: true,
+      components: [
+        { name: "خبز برجر", quantity: 1 },
+        { name: "صدر دجاج مقرمش", quantity: 1 },
+        { name: "خس", quantity: 1 },
+        { name: "طماطم", quantity: 1 },
+        { name: "صلصة خاصة", quantity: 1 },
+      ],
     },
     {
       id: "2",
@@ -84,6 +95,14 @@ const StorePage = () => {
         "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&q=80",
       category: "pizza",
       featured: true,
+      components: [
+        { name: "عجينة بيتزا", quantity: 1 },
+        { name: "صلصة طماطم", quantity: 1 },
+        { name: "جبنة موزاريلا", quantity: 1 },
+        { name: "فلفل", quantity: 1 },
+        { name: "بصل", quantity: 1 },
+        { name: "زيتون", quantity: 1 },
+      ],
     },
     {
       id: "3",
@@ -95,6 +114,13 @@ const StorePage = () => {
       image:
         "https://images.unsplash.com/photo-1561651823-34feb02250e4?w=500&q=80",
       category: "sandwiches",
+      components: [
+        { name: "خبز صاج", quantity: 1 },
+        { name: "لحم مشوي", quantity: 1 },
+        { name: "طحينة", quantity: 1 },
+        { name: "بصل", quantity: 1 },
+        { name: "بقدونس", quantity: 1 },
+      ],
     },
     {
       id: "4",
@@ -107,6 +133,7 @@ const StorePage = () => {
         "https://images.unsplash.com/photo-1613478223719-2ab802602423?w=500&q=80",
       category: "drinks",
       featured: true,
+      components: [{ name: "برتقال طازج", quantity: 3 }],
     },
     {
       id: "5",
@@ -118,6 +145,11 @@ const StorePage = () => {
       image:
         "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&q=80",
       category: "desserts",
+      components: [
+        { name: "كيك شوكولاتة", quantity: 1 },
+        { name: "صوص شوكولاتة", quantity: 1 },
+        { name: "كريمة مخفوقة", quantity: 1 },
+      ],
     },
     {
       id: "6",
@@ -129,6 +161,15 @@ const StorePage = () => {
       image:
         "https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?w=500&q=80",
       category: "burgers",
+      components: [
+        { name: "خبز برجر", quantity: 1 },
+        { name: "لحم أنجوس", quantity: 1 },
+        { name: "جبنة شيدر", quantity: 1 },
+        { name: "خس", quantity: 1 },
+        { name: "طماطم", quantity: 1 },
+        { name: "بصل", quantity: 1 },
+        { name: "صلصة خاصة", quantity: 1 },
+      ],
     },
   ];
 
@@ -191,8 +232,8 @@ const StorePage = () => {
     // Close the dialog and reset
     setSelectedProduct(null);
 
-    // Navigate to cart
-    navigate("/cart");
+    // Show success message
+    alert("تمت إضافة المنتج إلى السلة بنجاح");
   };
 
   return (
@@ -247,11 +288,11 @@ const StorePage = () => {
                     <div className="flex justify-between items-center">
                       <div>
                         <span className="font-bold text-lg">
-                          {product.discountPrice} ر.س
+                          {product.discountPrice} د.م
                         </span>
                         {product.price > product.discountPrice && (
                           <span className="text-sm text-gray-500 line-through mr-2">
-                            {product.price} ر.س
+                            {product.price} د.م
                           </span>
                         )}
                       </div>
@@ -309,11 +350,11 @@ const StorePage = () => {
                 <div className="flex justify-between items-center">
                   <div>
                     <span className="font-bold text-sm sm:text-lg">
-                      {product.discountPrice} ر.س
+                      {product.discountPrice} د.م
                     </span>
                     {product.price > product.discountPrice && (
                       <span className="text-xs sm:text-sm text-gray-500 line-through mr-2">
-                        {product.price} ر.س
+                        {product.price} د.م
                       </span>
                     )}
                   </div>
@@ -351,72 +392,136 @@ const StorePage = () => {
                 />
               </div>
 
-              <div className="grid gap-2">
-                <Label htmlFor="quantity">الكمية</Label>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleQuantityChange(-1)}
-                  >
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <span className="w-8 text-center">{quantity}</span>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => handleQuantityChange(1)}
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-medium mb-1">السعر</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-lg">
+                      {selectedProduct.discountPrice} د.م
+                    </span>
+                    {selectedProduct.price > selectedProduct.discountPrice && (
+                      <span className="text-sm text-gray-500 line-through">
+                        {selectedProduct.price} د.م
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 text-amber-600 text-sm mt-1">
+                    <Coins className="h-4 w-4" />
+                    <span>{selectedProduct.coinsPrice} نقطة</span>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-medium mb-1">الكمية</h3>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleQuantityChange(-1)}
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="text-lg font-medium w-8 text-center">
+                      {quantity}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => handleQuantityChange(1)}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid gap-2">
-                <Label>إضافات</Label>
-                <div className="grid gap-2">
-                  {extras.map((extra) => (
-                    <div
-                      key={extra.id}
-                      className="flex items-center justify-between p-2 border rounded-md"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          id={extra.id}
-                          checked={selectedExtras.some(
-                            (item) => item.id === extra.id,
+              {/* Product Components */}
+              {selectedProduct.components &&
+                selectedProduct.components.length > 0 && (
+                  <div>
+                    <h3 className="font-medium mb-2 flex items-center">
+                      <Utensils className="h-4 w-4 mr-1" />
+                      المكونات
+                    </h3>
+                    <Card>
+                      <CardContent className="p-3">
+                        <div className="grid gap-2">
+                          {selectedProduct.components.map(
+                            (component, index) => (
+                              <div
+                                key={`component-${index}`}
+                                className="flex justify-between items-center"
+                              >
+                                <span className="text-sm">
+                                  {component.name}
+                                </span>
+                                <span className="text-sm text-gray-500">
+                                  {component.quantity > 1
+                                    ? `${component.quantity}x`
+                                    : ""}
+                                </span>
+                              </div>
+                            ),
                           )}
-                          onCheckedChange={() => handleExtraToggle(extra)}
-                        />
-                        <Label
-                          htmlFor={extra.id}
-                          className="text-sm font-normal"
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
+              {/* Extras */}
+              <div>
+                <h3 className="font-medium mb-2">إضافات</h3>
+                <Card>
+                  <CardContent className="p-3">
+                    <div className="grid gap-3">
+                      {extras.map((extra) => (
+                        <div
+                          key={extra.id}
+                          className="flex items-center justify-between"
                         >
-                          {extra.name}
-                        </Label>
-                      </div>
-                      <span className="text-sm">{extra.price} ر.س</span>
+                          <div className="flex items-center gap-2">
+                            <Checkbox
+                              id={extra.id}
+                              checked={selectedExtras.some(
+                                (item) => item.id === extra.id,
+                              )}
+                              onCheckedChange={() => handleExtraToggle(extra)}
+                            />
+                            <Label htmlFor={extra.id} className="text-sm">
+                              {extra.name}
+                            </Label>
+                          </div>
+                          <span className="text-sm">{extra.price} د.م</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </CardContent>
+                </Card>
               </div>
+
+              <Separator />
 
               <div className="flex justify-between items-center">
-                <span className="font-medium">الإجمالي:</span>
+                <span className="font-medium">المجموع:</span>
                 <span className="font-bold text-lg">
-                  {calculateTotalPrice()} ر.س
+                  {calculateTotalPrice()} د.م
                 </span>
               </div>
             </div>
 
             <DialogFooter className="sm:justify-between">
               <DialogClose asChild>
-                <Button type="button" variant="outline">
-                  إلغاء
+                <Button variant="outline" className="gap-1">
+                  <X className="h-4 w-4" />
+                  <span>إلغاء</span>
                 </Button>
               </DialogClose>
-              <Button type="button" onClick={handleAddToCart}>
-                إضافة إلى السلة
+              <Button onClick={handleAddToCart} className="gap-1">
+                <ShoppingBag className="h-4 w-4" />
+                <span>أضف إلى السلة</span>
               </Button>
             </DialogFooter>
           </DialogContent>
