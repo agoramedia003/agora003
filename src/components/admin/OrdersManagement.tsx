@@ -99,124 +99,140 @@ const OrdersManagement = () => {
       return;
     }
 
-    // Simulate loading data
-    setTimeout(() => {
-      // Mock orders data
-      const mockOrders: Order[] = [
-        {
-          id: "ORD-1001",
-          customerName: "أحمد محمد",
-          customerPhone: "+212 612345678",
-          customerAddress: "شارع الحسن الثاني، الدار البيضاء",
-          items: [
-            {
-              name: "برجر دجاج مقرمش",
-              quantity: 2,
-              price: 35,
-              extras: [
-                { name: "جبنة إضافية", price: 5 },
-                { name: "صلصة حارة", price: 3 },
-              ],
-            },
-            {
-              name: "بطاطس كبير",
-              quantity: 1,
-              price: 15,
-            },
-            {
-              name: "بطاقة هدية",
-              quantity: 1,
-              price: 0,
-              cardCode: "GIFT-1234",
-              cardType: "gift",
-              giftType: "discount",
-            },
-          ],
-          total: 98,
-          coinsPrice: 980,
-          status: "new",
-          createdAt: new Date(Date.now() - 5 * 60000).toISOString(), // 5 minutes ago
-          timeInStage: 300, // 5 minutes
-        },
-        {
-          id: "ORD-1002",
-          customerName: "فاطمة العلوي",
-          customerPhone: "+212 623456789",
-          customerAddress: "شارع محمد الخامس، الرباط",
-          items: [
-            {
-              name: "بيتزا خضار",
-              quantity: 1,
-              price: 45,
-            },
-            {
-              name: "كولا",
-              quantity: 2,
-              price: 8,
-            },
-            {
-              name: "بطاقة مكافآت",
-              quantity: 1,
-              price: 0,
-              cardCode: "REWARD-5678",
-              cardType: "reward",
-            },
-          ],
-          total: 61,
-          status: "processing",
-          createdAt: new Date(Date.now() - 15 * 60000).toISOString(), // 15 minutes ago
-          timeInStage: 600, // 10 minutes
-        },
-        {
-          id: "ORD-1003",
-          customerName: "يوسف الناصري",
-          customerPhone: "+212 634567890",
-          customerAddress: "شارع المقاومة، مراكش",
-          items: [
-            {
-              name: "شاورما لحم",
-              quantity: 2,
-              price: 38,
-            },
-            {
-              name: "عصير برتقال",
-              quantity: 2,
-              price: 15,
-            },
-          ],
-          total: 106,
-          status: "preparing",
-          createdAt: new Date(Date.now() - 25 * 60000).toISOString(), // 25 minutes ago
-          timeInStage: 420, // 7 minutes
-        },
-        {
-          id: "ORD-1004",
-          customerName: "سارة بنعلي",
-          customerPhone: "+212 645678901",
-          customerAddress: "شارع الزرقطوني، الدار البيضاء",
-          items: [
-            {
-              name: "برجر لحم أنجوس",
-              quantity: 1,
-              price: 48,
-              extras: [{ name: "بصل مقرمش", price: 4 }],
-            },
-            {
-              name: "سلطة",
-              quantity: 1,
-              price: 20,
-            },
-          ],
-          total: 72,
-          status: "delivering",
-          createdAt: new Date(Date.now() - 40 * 60000).toISOString(), // 40 minutes ago
-          timeInStage: 900, // 15 minutes
-        },
-      ];
+    // Load orders from API
+    const loadOrders = async () => {
+      setIsLoading(true);
+      try {
+        if (import.meta.env.VITE_TEMPO !== "true") {
+          // In a real environment, fetch from API
+          const ordersData = await adminApi.getOrders();
+          setOrders(ordersData);
+        } else {
+          // Mock orders data for Tempo environment
+          setTimeout(() => {
+            const mockOrders: Order[] = [
+              {
+                id: "ORD-1001",
+                customerName: "أحمد محمد",
+                customerPhone: "+212 612345678",
+                customerAddress: "شارع الحسن الثاني، الدار البيضاء",
+                items: [
+                  {
+                    name: "برجر دجاج مقرمش",
+                    quantity: 2,
+                    price: 35,
+                    extras: [
+                      { name: "جبنة إضافية", price: 5 },
+                      { name: "صلصة حارة", price: 3 },
+                    ],
+                  },
+                  {
+                    name: "بطاطس كبير",
+                    quantity: 1,
+                    price: 15,
+                  },
+                  {
+                    name: "بطاقة هدية",
+                    quantity: 1,
+                    price: 0,
+                    cardCode: "GIFT-1234",
+                    cardType: "gift",
+                    giftType: "discount",
+                  },
+                ],
+                total: 98,
+                coinsPrice: 980,
+                status: "new",
+                createdAt: new Date(Date.now() - 5 * 60000).toISOString(), // 5 minutes ago
+                timeInStage: 300, // 5 minutes
+              },
+              {
+                id: "ORD-1002",
+                customerName: "فاطمة العلوي",
+                customerPhone: "+212 623456789",
+                customerAddress: "شارع محمد الخامس، الرباط",
+                items: [
+                  {
+                    name: "بيتزا خضار",
+                    quantity: 1,
+                    price: 45,
+                  },
+                  {
+                    name: "كولا",
+                    quantity: 2,
+                    price: 8,
+                  },
+                  {
+                    name: "بطاقة مكافآت",
+                    quantity: 1,
+                    price: 0,
+                    cardCode: "REWARD-5678",
+                    cardType: "reward",
+                  },
+                ],
+                total: 61,
+                status: "processing",
+                createdAt: new Date(Date.now() - 15 * 60000).toISOString(), // 15 minutes ago
+                timeInStage: 600, // 10 minutes
+              },
+              {
+                id: "ORD-1003",
+                customerName: "يوسف الناصري",
+                customerPhone: "+212 634567890",
+                customerAddress: "شارع المقاومة، مراكش",
+                items: [
+                  {
+                    name: "شاورما لحم",
+                    quantity: 2,
+                    price: 38,
+                  },
+                  {
+                    name: "عصير برتقال",
+                    quantity: 2,
+                    price: 15,
+                  },
+                ],
+                total: 106,
+                status: "preparing",
+                createdAt: new Date(Date.now() - 25 * 60000).toISOString(), // 25 minutes ago
+                timeInStage: 420, // 7 minutes
+              },
+              {
+                id: "ORD-1004",
+                customerName: "سارة بنعلي",
+                customerPhone: "+212 645678901",
+                customerAddress: "شارع الزرقطوني، الدار البيضاء",
+                items: [
+                  {
+                    name: "برجر لحم أنجوس",
+                    quantity: 1,
+                    price: 48,
+                    extras: [{ name: "بصل مقرمش", price: 4 }],
+                  },
+                  {
+                    name: "سلطة",
+                    quantity: 1,
+                    price: 20,
+                  },
+                ],
+                total: 72,
+                status: "delivering",
+                createdAt: new Date(Date.now() - 40 * 60000).toISOString(), // 40 minutes ago
+                timeInStage: 900, // 15 minutes
+              },
+            ];
 
-      setOrders(mockOrders);
-      setIsLoading(false);
-    }, 1000);
+            setOrders(mockOrders);
+            setIsLoading(false);
+          }, 1000);
+        }
+      } catch (error) {
+        console.error("Error loading orders:", error);
+        setIsLoading(false);
+      }
+    };
+
+    loadOrders();
 
     // Set up interval for time updates and alerts
     const intervalId = setInterval(() => {

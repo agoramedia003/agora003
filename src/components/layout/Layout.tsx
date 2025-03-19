@@ -17,7 +17,24 @@ const Layout = ({ children }: LayoutProps) => {
     const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
     if (!isLoggedIn) {
       navigate("/login");
+      return;
     }
+
+    // Load user data and wallet balance
+    const loadUserData = async () => {
+      try {
+        if (import.meta.env.VITE_TEMPO !== "true") {
+          // In a real environment, fetch from API
+          // const userProfile = await userApi.getProfile();
+          // const walletBalance = await walletService.getBalance();
+          // Update user data in state or context
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+      }
+    };
+
+    loadUserData();
   }, [navigate]);
 
   // Determine active item based on current path
