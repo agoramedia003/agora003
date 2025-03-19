@@ -15,12 +15,45 @@ const CardsDiscoveryPage = lazy(() => import("./components/cards"));
 const LoginPage = lazy(() => import("./components/login"));
 const PromotionsPage = lazy(() => import("./components/promotions"));
 
-// Protected route component
+// Admin pages
+const AdminLoginPage = lazy(() => import("./components/admin/LoginPage"));
+const AdminDashboardPage = lazy(() => import("./components/admin/Dashboard"));
+const AdminStoreManagementPage = lazy(
+  () => import("./components/admin/StoreManagement"),
+);
+const AdminOrdersManagementPage = lazy(
+  () => import("./components/admin/OrdersManagement"),
+);
+const AdminUsersManagementPage = lazy(
+  () => import("./components/admin/UsersManagement"),
+);
+const AdminTransactionsManagementPage = lazy(
+  () => import("./components/admin/TransactionsManagement"),
+);
+const AdminAnalyticsDashboardPage = lazy(
+  () => import("./components/admin/AnalyticsDashboard"),
+);
+const AdminCardsManagementPage = lazy(
+  () => import("./components/admin/CardsManagement"),
+);
+
+// Protected route component for user interface
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
 
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+// Protected route component for admin dashboard
+const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const isAdminLoggedIn = localStorage.getItem("adminLoggedIn") === "true";
+
+  if (!isAdminLoggedIn) {
+    return <Navigate to="/admin/login" replace />;
   }
 
   return <>{children}</>;
@@ -136,6 +169,69 @@ function App() {
               <ProtectedRoute>
                 <PromotionsPage />
               </ProtectedRoute>
+            }
+          />
+
+          {/* Admin Routes */}
+          <Route
+            path="/admin"
+            element={<Navigate to="/admin/login" replace />}
+          />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route
+            path="/admin/dashboard"
+            element={
+              <AdminProtectedRoute>
+                <AdminDashboardPage />
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/store"
+            element={
+              <AdminProtectedRoute>
+                <AdminStoreManagementPage />
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/orders"
+            element={
+              <AdminProtectedRoute>
+                <AdminOrdersManagementPage />
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <AdminProtectedRoute>
+                <AdminUsersManagementPage />
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/transactions"
+            element={
+              <AdminProtectedRoute>
+                <AdminTransactionsManagementPage />
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/analytics"
+            element={
+              <AdminProtectedRoute>
+                <AdminAnalyticsDashboardPage />
+              </AdminProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/cards"
+            element={
+              <AdminProtectedRoute>
+                <AdminCardsManagementPage />
+              </AdminProtectedRoute>
             }
           />
 
